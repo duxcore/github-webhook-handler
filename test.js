@@ -1,14 +1,14 @@
 const test = require('tape')
 const crypto = require('crypto')
-const handler = require('./')
+const handler = require('./lib/index').createHandler
 const through2 = require('through2')
 const series = require('run-series')
 
-function signBlob (key, blob) {
+function signBlob(key, blob) {
   return `sha1=${crypto.createHmac('sha1', key).update(blob).digest('hex')}`
 }
 
-function mkReq (url, method) {
+function mkReq(url, method) {
   const req = through2()
   req.method = method || 'POST'
   req.url = url
@@ -20,7 +20,7 @@ function mkReq (url, method) {
   return req
 }
 
-function mkRes () {
+function mkRes() {
   const res = {
     writeHead: function (statusCode, headers) {
       res.$statusCode = statusCode
@@ -153,7 +153,7 @@ test('handler can reject events', (t) => {
   t.plan(acceptable.length + unacceptable.length)
   series(acceptableTests.concat(unacceptableTests))
 
-  function acceptableReq (events, callback) {
+  function acceptableReq(events, callback) {
     const h = handler({
       path: '/some/url',
       secret: 'bogus',
@@ -171,14 +171,14 @@ test('handler can reject events', (t) => {
     })
   }
 
-  function unacceptableReq (events, callback) {
+  function unacceptableReq(events, callback) {
     const h = handler({
       path: '/some/url',
       secret: 'bogus',
       events: unacceptableEvents[events]
     })
 
-    h.on('error', () => {})
+    h.on('error', () => { })
 
     h(mkReq('/some/url'), mkRes(), (err) => {
       t.ok(err, 'rejected because options.events was ' + events)
@@ -219,7 +219,7 @@ test('handler accepts a signed blob', (t) => {
   req.headers['x-github-event'] = 'push'
 
   h.on('push', (event) => {
-    t.deepEqual(event, { event: 'push', id: 'bogus', payload: obj, url: '/', host: undefined, protocol: undefined, path: '/' })
+    t.deepEqual(event, { event: 'push', id: 'bogus', payload: obj, url: '/', host: undefined, path: '/' })
     t.equal(res.$statusCode, 200, 'correct status code')
     t.deepEqual(res.$headers, { 'content-type': 'application/json' })
     t.equal(res.$end, '{"ok":true}', 'got correct content')
@@ -247,7 +247,7 @@ test('handler accepts multi blob in Array', (t) => {
   req.headers['x-github-event'] = 'push'
 
   h.on('push', (event) => {
-    t.deepEqual(event, { event: 'push', id: 'bogus', payload: obj, url: '/some/url', host: undefined, protocol: undefined, path: '/some/url' })
+    t.deepEqual(event, { event: 'push', id: 'bogus', payload: obj, url: '/some/url', host: undefined, path: '/some/url' })
     t.equal(res.$statusCode, 200, 'correct status code')
     t.deepEqual(res.$headers, { 'content-type': 'application/json' })
     t.equal(res.$end, '{"ok":true}', 'got correct content')
@@ -280,7 +280,7 @@ test('handler accepts a signed blob with alt event', (t) => {
   })
 
   h.on('issue', (event) => {
-    t.deepEqual(event, { event: 'issue', id: 'bogus', payload: obj, url: '/', host: undefined, protocol: undefined, path: '/' })
+    t.deepEqual(event, { event: 'issue', id: 'bogus', payload: obj, url: '/', host: undefined, path: '/' })
     t.equal(res.$statusCode, 200, 'correct status code')
     t.deepEqual(res.$headers, { 'content-type': 'application/json' })
     t.equal(res.$end, '{"ok":true}', 'got correct content')

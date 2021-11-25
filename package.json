@@ -2,11 +2,11 @@
   "name": "github-webhook-handler",
   "version": "1.0.0",
   "description": "Web handler / middleware for processing GitHub Webhooks",
-  "main": "github-webhook-handler.js",
-  "types": "github-webhook-handler.d.ts",
+  "main": "lib/index.js",
   "scripts": {
-    "lint": "standard *.js",
-    "test": "npm run lint && node test.js"
+    "build": "tsc",
+    "prepack": "yarn build",
+    "test": "yarn build && node test.js"
   },
   "keywords": [
     "github",
