@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "prepack": "yarn build",
+    "postinstall": "yarn build",
     "test": "yarn build && node test.js"
   },
   "keywords": [

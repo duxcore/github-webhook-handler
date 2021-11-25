@@ -79,36 +79,21 @@ export const createHandler = (initOptions: CreateHandlerOptions) => {
       errback(err)
     }
 
-    const sig = req.headers['x-hub-signature']
+    const sig = req.headers['x-hub-signature'];
     const event = req.headers['x-github-event'] as string;
-    const id = req.headers['x-github-delivery']
+    const id = req.headers['x-github-delivery'];
 
-    if (!sig) {
-      return hasError('No X-Hub-Signature found on request')
-    }
-
-    if (!event) {
-      return hasError('No X-Github-Event found on request')
-    }
-
-    if (!id) {
-      return hasError('No X-Github-Delivery found on request')
-    }
-
-    if (events && events.indexOf(event) === -1) {
-      return hasError('X-Github-Event is not acceptable')
-    }
+    if (!sig) return hasError('No X-Hub-Signature found on request');
+    if (!event) return hasError('No X-Github-Event found on request');
+    if (!id) return hasError('No X-Github-Delivery found on request');
+    if (events && events.indexOf(event) === -1) return hasError('X-Github-Event is not acceptable');
 
     req.pipe(bl((err, data) => {
-      if (err) {
-        return hasError(err.message)
-      }
+      if (err) return hasError(err.message);
 
       let obj
 
-      if (!verify(sig, data)) {
-        return hasError('X-Hub-Signature does not match blob signature')
-      }
+      if (!verify(sig, data)) return hasError('X-Hub-Signature does not match blob signature');
 
       try {
         obj = JSON.parse(data.toString())
