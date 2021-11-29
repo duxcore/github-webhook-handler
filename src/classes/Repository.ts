@@ -1,10 +1,10 @@
-import { RepositoryRaw } from "../types/factories/Repository";
+import { BaseRepository } from "../types/factories/Repository";
 
 export default class Repository {
 
-  private _raw: RepositoryRaw;
+  private _raw: BaseRepository;
 
-  constructor(raw: RepositoryRaw) {
+  constructor(raw: BaseRepository) {
     this._raw = raw;
   }
 

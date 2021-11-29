@@ -1,4 +1,5 @@
 import { BaseUser } from "./BaseUser";
+import { LabelEntity } from "./LabelEntity";
 import { Reactions } from "./Reactions";
 
 export interface Issue {
@@ -13,11 +14,11 @@ export interface Issue {
   number: number;
   title: string;
   user: BaseUser;
-  labels?: (null)[] | null;
+  labels?: (LabelEntity)[] | null;
   state: string;
   locked: boolean;
-  assignee?: null;
-  assignees?: (null)[] | null;
+  assignee?: BaseUser;
+  assignees?: (BaseUser)[] | null;
   milestone?: null;
   comments: number;
   created_at: string;

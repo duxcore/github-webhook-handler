@@ -1,7 +1,7 @@
 import { BaseUser } from "./BaseUser";
 import { License } from "./License";
 
-export interface RepositoryRaw {
+export interface BaseRepository {
   id: number;
   node_id: string;
   name: string;
