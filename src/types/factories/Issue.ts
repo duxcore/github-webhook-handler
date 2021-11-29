@@ -1,8 +1,9 @@
 import { BaseUser } from "./BaseUser";
 import { LabelEntity } from "./LabelEntity";
+import { MilestoneEntity } from "./MilestoneEntity";
 import { Reactions } from "./Reactions";
 
-export interface Issue {
+export interface IssueEntity {
   url: string;
   repository_url: string;
   labels_url: string;
@@ -17,13 +18,13 @@ export interface Issue {
   labels?: (LabelEntity)[] | null;
   state: string;
   locked: boolean;
-  assignee?: BaseUser;
+  assignee: BaseUser;
   assignees?: (BaseUser)[] | null;
-  milestone?: null;
+  milestone: MilestoneEntity;
   comments: number;
   created_at: string;
   updated_at: string;
-  closed_at?: null;
+  closed_at?: string;
   author_association: string;
   active_lock_reason?: null;
   body: string;
