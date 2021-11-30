@@ -4,12 +4,29 @@ import { IssueEntity } from "./factories/Issue";
 import { IssueComment } from "./factories/IssueComment";
 import { LabelEntity } from "./factories/LabelEntity";
 import { MilestoneEntity } from "./factories/MilestoneEntity";
-import { Organization } from "./factories/Organization";
+import { BaseOrganization } from "./factories/Organization";
 import { ProjectCardEntity } from "./factories/ProjectCardEntitiy";
 import { ProjectColumnEntity } from "./factories/ProjectColumnEntity";
 import { ProjectEntity } from "./factories/ProjectEntity";
 import { Pusher } from "./factories/Pusher";
 import { BaseRepository } from "./factories/Repository";
+import { ForkeeEntity } from "./factories/ForkeeEntity";
+import { PullRequestEntity } from "./factories/PullRequestEntity";
+
+type PayloadBase<P = {}> = P & {
+  action: string;
+  repository: BaseRepository;
+  organization: BaseOrganization;
+  sender: BaseUser;  
+}
+
+type ActionlessPayloadBase<P = {}> = P & {
+  repository: BaseRepository;
+  organization: BaseOrganization;
+  sender: BaseUser;
+}
+
+
 
 // event - pull
 // action (null because its default)
@@ -19,7 +36,7 @@ export interface RawGitHubPush {
   after: string;
   repository: BaseRepository;
   pusher: Pusher;
-  organization: Organization;
+  organization: BaseOrganization;
   sender: BaseUser;
   created: boolean;
   deleted: boolean;
@@ -36,17 +53,13 @@ export interface RawGitHubPush {
 
 // event - issues
 // action - opened
-export interface RawGitHubIssueOpened {
-  action: string;
+export interface RawGitHubIssueOpened extends PayloadBase {
   issue: IssueEntity;
-  repository: BaseRepository;
-  organization: Organization;
-  sender: BaseUser;
 }
 
 // event - issues
 // action - edited
-export interface RawGitHubIssueCommentEdited
+export interface RawGitHubIssueEdited
   extends RawGitHubIssueOpened {
     changes: {
       body?: {
@@ -59,8 +72,13 @@ export interface RawGitHubIssueCommentEdited
 }
 
 // event - issues
+// action - closed
+export interface RawGitHubIssueClosed
+  extends RawGitHubIssueOpened {}
+
+// event - issues
 // action - deleted
-export interface RawGithubIssueDeleted
+export interface RawGitHubIssueDeleted
   extends RawGitHubIssueOpened {}
 
 // event - issues
@@ -90,64 +108,69 @@ export interface RawGitHubIssueMilestoned
     milestone: MilestoneEntity;
   }
 
+// event - issues
+// action - demilestoned
+export interface RawGitHubIssueDemilestoned
+  extends RawGitHubIssueOpened {
+    milestone: MilestoneEntity;
+  } 
+
+// event - issues
+// action - assigned
+export interface RawGitHubIssueUserAssigned extends PayloadBase {
+  issue: IssueEntity;
+  assignee: BaseUser;
+}
+
+// event - issues
+// action - unassigned
+export interface RawGitHubIssueUserUnassigned extends PayloadBase {
+  issue: IssueEntity;
+  assignee: BaseUser;
+}
+
+// event - issues
+// action - labeled
+export interface RawGitHubIssueLabelAdded extends PayloadBase {
+  issue: IssueEntity;
+  label: LabelEntity;
+}
+
+// event - issues
+// action - unlabeled
+export interface RawGitHubIssueLabelRemoved extends PayloadBase {
+  issue: IssueEntity;
+  label: LabelEntity;
+}
+
 /**
  * ISSUE COMMENTS
  */
 
 // event - issue_comment
 // action - created
-export interface RawGitHubIssueComment {
-  action: string;
+export interface RawGitHubIssueCommentCreated extends PayloadBase{
   issue: IssueEntity;
   comment: IssueComment;
-  repository: BaseRepository;
-  organization: Organization;
-  sender: BaseUser;
 }
 
-// event - issues
-// action - assigned
-export interface RawGitHubIssueUserAssigned {
-  action: string;
-  issue: IssueEntity;
-  assignee: BaseUser;
-  repository: BaseRepository;
-  organization: Organization;
-  sender: BaseUser;
-}
+// event - issue_comment
+// action - edited
+export interface RawGitHubIssueCommentEdited  
+  extends RawGitHubIssueCommentCreated {
+    changes: {
+      body: {
+        from: string;
+      }
+    }
+  }
 
-// event - issues
-// action - unassigned
-export interface RawGitHubIssueUserUnassigned {
-  action: string;
-  issue: IssueEntity;
-  assignee: BaseUser;
-  repository: BaseRepository;
-  organization: Organization;
-  sender: BaseUser;
-}
+// event - issue_comment
+// action - deleted
+export interface RawGitHubissueCommentDeleted 
+  extends RawGitHubIssueCommentCreated {}
 
-// event - issues
-// action - labeled
-export interface RawGitHubIssueLabelAdded {
-  action: string;
-  issue: IssueEntity;
-  label: LabelEntity;
-  repository: BaseRepository;
-  organization: Organization;
-  sender: BaseUser;
-}
 
-// event - issues
-// action - unlabeled
-export interface RawGitHubIssueLabelRemoved {
-  action: string;
-  issue: IssueEntity;
-  label: LabelEntity;
-  repository: BaseRepository;
-  organization: Organization;
-  sender: BaseUser;
-}
 
 /**
  * LABELS
@@ -159,7 +182,7 @@ export interface RawGitHubLabelCreated {
   action: string;
   label: LabelEntity;
   repository: BaseRepository;
-  organization: Organization;
+  organization: BaseOrganization;
   sender: BaseUser;
 }
 
@@ -195,10 +218,12 @@ export interface RawGitHubMilestoneCreated {
   action: string;
   milestone: MilestoneEntity;
   repository: BaseRepository;
-  organization: Organization;
+  organization: BaseOrganization;
   sender: BaseUser;
 }
 
+// event - milestone
+// action - edited
 export interface RawGitHubMilestoneEdited
   extends RawGitHubMilestoneCreated {
     changes: {
@@ -211,48 +236,37 @@ export interface RawGitHubMilestoneEdited
     }
   }
 
+// event - milestone
+// action - deleted
+export interface RawGitHubMilestoneDeleted
+  extends RawGitHubMilestoneCreated {}
+
 /**
  * PROJECTS
  */
 
 // event - project
 // action - created
-export interface RawGitHubProjectCreated {
-  action: string;
+export interface RawGitHubProjectCreated extends PayloadBase {
   project: ProjectEntity;
-  repository: BaseRepository;
-  organization: Organization;
-  sender: BaseUser;
 }
 
 // event - project
 // action - edited
-export interface RawGitHubProjectEdited {
-  action: string;
+export interface RawGitHubProjectEdited extends PayloadBase{
   project: ProjectEntity;
-  repository: BaseRepository;
-  organization: Organization;
-  sender: BaseUser;
 }
 
 // event - project
 // action - closed
-export interface RawGitHubProjectCreated {
-  action: string;
+export interface RawGitHubProjectCreated extends PayloadBase {
   project: ProjectEntity;
-  repository: BaseRepository;
-  organization: Organization;
-  sender: BaseUser;
 }
 
 // event - project
 // action - deleted
-export interface RawGitHubProjectDeleted {
-  action: string;
+export interface RawGitHubProjectDeleted extends PayloadBase{
   project: ProjectEntity;
-  repository: BaseRepository;
-  organization: Organization;
-  sender: BaseUser;
 }
 
 /**
@@ -261,12 +275,8 @@ export interface RawGitHubProjectDeleted {
 
 // event - project_card
 // action - created
-export interface RawGitHubProjectCardCreated {
-  action: string;
+export interface RawGitHubProjectCardCreated extends PayloadBase{
   project_card: ProjectCardEntity;
-  repository: BaseRepository;
-  organization: Organization;
-  sender: BaseUser;
 }
 
 // event - project_card
@@ -292,7 +302,7 @@ export interface RawGitHubProjectCardMoved
 
 // event - project_card
 // action - converted
-export interface RawGithubProjectCardConverted extends RawGitHubProjectCardEdited {}
+export interface RawGitHubProjectCardConverted extends RawGitHubProjectCardEdited {}
 
 /**
  * PROJECT COLUMN
@@ -300,12 +310,8 @@ export interface RawGithubProjectCardConverted extends RawGitHubProjectCardEdite
 
 // event - project_column
 // action - created
-export interface RawGitHubProjectColumnCreated {
-  action: string;
+export interface RawGitHubProjectColumnCreated extends PayloadBase {
   project_column: ProjectColumnEntity;
-  repository: BaseRepository;
-  organization: Organization;
-  sender: BaseUser;
 }
 
 // event - project_column
@@ -328,4 +334,108 @@ export interface RawGitHubProjectColumnDeleted
 // action - moved
 export interface RawGitHubProjectColumnMoved
   extends RawGitHubProjectColumnCreated {}
+
+/**
+ * REPOSITORY STARS
+ */
+
+// event - star
+// action - created
+export interface RawGitHubStarCreated extends PayloadBase{
+  starred_at: string;
+}
+
+// event - star
+// action - deleted
+export interface RawGitHubStarDeleted extends PayloadBase {
+  starred_at: null;
+}
+
+/**
+ * REPOSITORY WATCH
+ */
+
+// event - watch
+// action - started
+export interface RawGitHubWatchStarted extends PayloadBase {}
+
+/**
+ * REPOSITORY
+ */
+
+// event - repository
+// action - publicized
+export interface RawGitHubRepositoryPublicized extends PayloadBase {}
+
+// event - fork
+// action - (undefined)
+export interface RawGitHubRepositoryForked extends ActionlessPayloadBase {
+  forkee: ForkeeEntity
+}
+
+/**
+ * PULL REQUESTS
+ */
+
+// event - pull_request
+// action - opened
+export interface RawGitHubPullRequestOpened extends PayloadBase {
+  number: number;
+  pull_request: PullRequestEntity
+}
+
+// event - pull_request
+// action - edited
+export interface RawGitHubPullRequestEdited extends RawGitHubPullRequestOpened {
+  changes:  {
+    body?: {
+      from: string
+    },
+    title?: {
+      from: string
+    }
+  }
+}
+
+// event - pull_request
+// action - closed
+export interface RawGitHubPullRequestClosed extends RawGitHubPullRequestOpened {}
+
+// event - pull_request
+// action - converted_to_draft
+export interface RawGitHubPullRequestConvertedToDraft extends RawGitHubPullRequestOpened {}
+
+// event - pull_request
+// action - ready_for_review
+export interface RawGitHubPullRequestReadyForReview extends RawGitHubPullRequestOpened {}
+
+// event - pull_request
+// action - assigned
+export interface RawGitHubPullRequestUserAssigned extends RawGitHubPullRequestOpened {
+  assignee: BaseUser;
+}
+
+// event - pull_request
+// action - labeled
+export interface RawGitHubPullRequestLabeled extends RawGitHubPullRequestOpened {
+  label: LabelEntity
+}
+
+// event - pull_request
+// action - unlabeled
+export interface RawGitHubPullRequestUnlabeled extends RawGitHubPullRequestOpened {
+  label: LabelEntity
+}
+
+// event - pull_request
+// action - unassigned
+export interface RawGitHubPullRequestUserUnassigned extends RawGitHubPullRequestOpened {
+  assignee: BaseUser;
+}
+
+// event - pull_request
+// action - review_requested
+export interface RawGitHubPullRequestReviewRequested extends RawGitHubPullRequestOpened {
+  requested_reviewer: BaseUser
+}
 

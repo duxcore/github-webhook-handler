@@ -1,4 +1,4 @@
-export interface Organization {
+export interface BaseOrganization {
   login: string;
   id: number;
   node_id: string;

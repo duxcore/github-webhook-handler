@@ -1,13 +1,38 @@
-issue closed
-issue unmilestoned
+Repository Fork Removed
 
-comment edited
-comment deleted
+Repository Privitized
 
-milestone deleted
+Transfer Ownership of Repository
 
-issue reaction add
-issue reaction remove
+Archive Repository
+Unarchive Repository *
 
-issue comment reaction add
-issue comment reaction remove
+Commit Comment
+
+Pull Request Merged
+Pull Request Deleted
+
+Pull Request Comment Added
+Pull Request Comment Edited
+Pull Request Comment Deleted
+
+Pull Request Convorsation Locked
+
+Pull Request Review Unrequested
+
+Pull Request Label Added
+Pull Request Label Removed
+
+Pull Request Milestoned
+Pull Request Demilestoned
+
+Pull Request Issue Linked
+Pull Request Issue Unlinked
+
+Pull Request Proejct Added
+Pull Request Project Removed
+
+---
+
+Branch Created
+Branch Deleted
