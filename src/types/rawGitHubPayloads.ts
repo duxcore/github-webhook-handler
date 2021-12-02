@@ -15,6 +15,7 @@ import { PullRequestEntity } from "./factories/PullRequestEntity";
 import { ReviewEntity } from "./factories/ReviewEntity";
 import { PullRequestReviewCommentEntity } from "./factories/PullRequestReviewComment";
 import { PullRequestReviewThread } from "./factories/PullRequestReviewThread";
+import { BranchProtectionRuleEntity, EditableBranchRules } from "./factories/BranchProtectionRuleEntity";
 
 type PayloadBase<P = {}> = P & {
   action: string;
@@ -29,6 +30,16 @@ type ActionlessPayloadBase<P = {}> = P & {
   sender: BaseUser;
 }
 
+
+type PayloadInjector<D> = {
+  [E in keyof D]: {
+    [A in keyof D[E]]: PayloadBase<D[E][A]>
+  }
+}
+
+type CommonTypeInjector<Target, Payload> = {
+  [Action in keyof Target]: Payload & Target[Action];
+}
 
 
 // event - pull
@@ -58,16 +69,25 @@ export interface RawGitHubRepositoryForked extends ActionlessPayloadBase {
 
 type RGT<E extends keyof RawGitHubTypes, A extends keyof RawGitHubTypes[E]> = RawGitHubTypes[E][A]
 
-export interface RawGitHubTypes  {
+export type RawGitHubTypes = PayloadInjector<{
+  branch_protection_rule: CommonTypeInjector<{
+    created: {},
+    edit: {
+      changes: {
+        [rule in keyof EditableBranchRules]?: {
+          from: EditableBranchRules[rule]
+        };
+      };
+    };
+    deleted: {}
+  }, { rule: BranchProtectionRuleEntity }>
 
   /**
    * ISSUES
    */
-  issues: {
-    opened: PayloadBase & {
-      issue: IssueEntity;
-    };
-    edited: RawGitHubTypes["issues"]["opened"] & {
+  issues: CommonTypeInjector<{
+    opened: {};
+    edited: {
       changes: {
         body?: {
           from: string
@@ -77,52 +97,55 @@ export interface RawGitHubTypes  {
         }
       }
     };
-    closed: & RGT<"issues", "opened">;
-    deleted: & RGT<"issues", "opened">;
-    pinned: & RGT<"issues", "opened">;
-    unpinned: & RGT<"issues", "opened">;
-    locked: & RGT<"issues", "opened">;
-    unlocked: & RGT<"issues", "opened">;
-    milestoned: & RGT<"issues", "opened"> & {
+    closed: {}
+    reopened: {}
+    transferred: {}
+    deleted: {}
+    pinned: {}
+    unpinned: {}
+    locked: {}
+    unlocked: {}
+    milestoned: {
       milestone: MilestoneEntity;
     };
     demilestoned: & RGT<"issues", "milestoned">
-    assigned: & RGT<"issues", "opened"> & {
+    assigned: {
       assignee: BaseUser;
     };
     unassigned: & RGT<"issues", "assigned">
-    labeled: & RGT<"issues", "opened"> & {
+    labeled: {
       label: LabelEntity
     };
     unlabeled: & RGT<"issues", "labeled">;
-  };
+  }, { issue: IssueEntity }>;
 
   /**
    * ISSUE COMMENTS
    */
-  issue_comment: {
-    created: PayloadBase & {
+  issue_comment: CommonTypeInjector<{
+    created: {
       issue: IssueEntity;
       comment: IssueComment;
     };
-    edited: RGT<"issue_comment", "created"> & {
+    edited: {
       changes: {
         body: {
           from: string;
         }
       }
     },
-    deleted: & RGT<"issue_comment", "created">;
-  };
+    deleted: {};
+  }, {
+    issue: IssueEntity;
+    comment: IssueComment;
+  }>;
 
   /**
    * LABELS
    */
-  label: {
-    created: PayloadBase & {
-      label: LabelEntity;
-    };
-    edited: & RGT<"label", "created"> & {
+  label: CommonTypeInjector<{
+    created: {};
+    edited: {
       changes: {
         name?: {
           from: string;
@@ -135,17 +158,15 @@ export interface RawGitHubTypes  {
         }
       }
     };
-    deleted: & RGT<"label", "created">;
-  };
+    deleted: {};
+  }, { label: LabelEntity; }>;
 
   /**
    * MILESTONES
    */
-  milestone: {
-    created: PayloadBase & {
-      milestone: MilestoneEntity;
-    },
-    edited: & RGT<"milestone", "created"> & {
+  milestone: CommonTypeInjector<{
+    created: {},
+    edited: {
       changes: {
         title?: {
           from: string
@@ -155,27 +176,40 @@ export interface RawGitHubTypes  {
         };
       };
     };
-    deleted: & RGT<"milestone", "created">;
-  };
+    deleted: {};
+  }, {
+    milestone: MilestoneEntity
+  }>;
 
   /**
    * PROJECTS
    */
-  project: {
-    created: PayloadBase & {
-      project: ProjectEntity;
+  project: CommonTypeInjector<{
+    created: {}
+    edited: {
+      changes: {
+        name?: {
+          from: string;
+        },
+        body?: {
+          from: string;
+        }
+      }
     };
-    edited: & RGT<"project", "created">;
-    closed: & RGT<"project", "created">;
-    deleted: & RGT<"project", "created">;
-  };
+    closed: {};
+    reopened: {}; 
+    deleted: {};
+  }, {
+    project: ProjectEntity;
+  }>;
 
   /**
    * PROJECT CARDS
    */
   project_card: {
-    created: PayloadBase & {
+    created: {
       project_card: ProjectCardEntity;
+      after_id: number | null;
     };
     edited: & RGT<"project_card", "created"> & {
       changes: {
@@ -198,29 +232,30 @@ export interface RawGitHubTypes  {
   /**
    * PROJECT COLUMNS
    */
-  project_column: {
-    created: PayloadBase & {
-      project_column: ProjectColumnEntity;
-    };
-    edited: & RGT<"project_column", "created"> & {
+  project_column: CommonTypeInjector<{
+    created: {};
+    edited: {
       changes: {
         name: {
           from: string;
         };
       };
     };
-    deleted: & RGT<"project_column", "created">;
-    moved: & RGT<"project_column", "created">;
-  }
+    deleted: {};
+    moved: {};
+  }, {
+    project_column: ProjectColumnEntity;
+    after_id: number | null;
+  }>
 
   /**
    * REPOSITORY STARS
    */
   star: {
-    created: PayloadBase & {
+    created: {
       starred_at: string;
     };
-    deleted: PayloadBase & {
+    deleted: {
       starred_at: null;
     };
   };
@@ -228,19 +263,24 @@ export interface RawGitHubTypes  {
   /**
    * REPOSITORY
    */
-  repository: {
-    publicized: PayloadBase;
+  repository:{
+    created: {}
+    deleted: {};
+    archived: {};
+    unarchived: {};
+    edited: {};
+    renamed: {};
+    transferred: {};
+    publicized: {};
+    privitized: {};
   }
 
   /**
    * PULL REQUESTS
    */
-  pull_request:  {
-    opened: PayloadBase & {
-      number: number;
-      pull_request: PullRequestEntity;
-    };
-    edited: & RGT<"pull_request", "opened"> & {
+  pull_request:  CommonTypeInjector<{
+    opened: {};
+    edited: {
       changes:  {
         body?: {
           from: string;
@@ -250,75 +290,79 @@ export interface RawGitHubTypes  {
         };
       };
     };
-    closed: & RGT<"pull_request", "opened">;
-    reopened: & RGT<"pull_request", "opened">;
-    converted_to_draft: & RGT<"pull_request", "opened">;
-    ready_for_review: & RGT<"pull_request", "opened">;
-    assigned: & RGT<"pull_request", "opened"> & {
+    closed: {}
+    reopened: {}
+    converted_to_draft: {}
+    ready_for_review: {}
+    assigned:{
       assignee: BaseUser;
     };
     unassigned: & RGT<"pull_request", "assigned">;
-    labeled: & RGT<"pull_request", "opened"> & {
+    labeled: {
       label: LabelEntity;
     };
     unlabeled: & RGT<"pull_request", "labeled">;
-    locked: & RGT<"pull_request", "opened">;
+    locked: {}
     unlocked: & RGT<"pull_request", "locked">;
-    review_request: & RGT<"pull_request", "opened"> & {
+    review_request: {
       requested_reviewer: BaseUser;
     };
     review_request_removed: & RGT<"pull_request", "review_request">;
-  }
+    synchronize: {}
+    auto_merge_enabled: {};
+    auto_merge_disabled: {};
+  }, {
+    number: number;
+    pull_request: PullRequestEntity;
+  }>;
 
   /**
    * PULL REQUEST REVIEWS
    */
-  pull_request_review: {
-    submitted: PayloadBase & {
-      review: ReviewEntity;
-      pull_request: PullRequestEntity;
-    };
-    edited: & RGT<"pull_request_review", "submitted"> & {
+  pull_request_review: CommonTypeInjector<{
+    submitted: {};
+    dismissed: {};
+    edited: {
       changes: {
         body: {
           from: string;
         };
       };
     };
-  };
+  }, {
+    review: ReviewEntity;
+    pull_request: PullRequestEntity;
+  }>;
 
   /**
    * PULL REQUEST REVIEW COMMENTS
    */
-   pull_request_review_comment: {
-     created: PayloadBase & {
-      comment: PullRequestReviewCommentEntity;
-      pull_request: PullRequestEntity
-     };
-     edited: & RGT<"pull_request_review_comment", "created"> & {
+   pull_request_review_comment: CommonTypeInjector<{
+     created: {}
+     edited: {
       changes: {
         body: {
           from: string;
         };
       };
     };
-   };
+   }, {
+    comment: PullRequestReviewCommentEntity;
+    pull_request: PullRequestEntity
+   }>;
 
    /**
     * PULL REQUEST REVIEW THREAD
     */
     pull_request_review_thread: {
-      resolved: PayloadBase & {
+      resolved: {
         pull_request: PullRequestEntity;
         thread: PullRequestReviewThread;
       };
     };
-
-
-}
+}>
 
 function test<E extends keyof RawGitHubTypes, A extends keyof RawGitHubTypes[E]>(event: E, action: A): RawGitHubTypes[E][A] {
   return {} as RawGitHubTypes[E][A];
 }
-
-console.log((typeof test("issues", "edited")) == (typeof test("issues", "opened")))
+// test("branch_protection_rule", "deleted").
