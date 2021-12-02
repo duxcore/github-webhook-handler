@@ -12,6 +12,9 @@ import { Pusher } from "./factories/Pusher";
 import { BaseRepository } from "./factories/Repository";
 import { ForkeeEntity } from "./factories/ForkeeEntity";
 import { PullRequestEntity } from "./factories/PullRequestEntity";
+import { ReviewEntity } from "./factories/ReviewEntity";
+import { PullRequestReviewCommentEntity } from "./factories/PullRequestReviewComment";
+import { PullRequestReviewThread } from "./factories/PullRequestReviewThread";
 
 type PayloadBase<P = {}> = P & {
   action: string;
@@ -47,395 +50,275 @@ export interface RawGitHubPush {
   head_commit: CommitEntity;
 }
 
-/**
- * ISSUES
- */
-
-// event - issues
-// action - opened
-export interface RawGitHubIssueOpened extends PayloadBase {
-  issue: IssueEntity;
-}
-
-// event - issues
-// action - edited
-export interface RawGitHubIssueEdited
-  extends RawGitHubIssueOpened {
-    changes: {
-      body?: {
-        from: string
-      },
-      title?: {
-        from: string
-      }
-    }
-}
-
-// event - issues
-// action - closed
-export interface RawGitHubIssueClosed
-  extends RawGitHubIssueOpened {}
-
-// event - issues
-// action - deleted
-export interface RawGitHubIssueDeleted
-  extends RawGitHubIssueOpened {}
-
-// event - issues
-// action - pinned
-export interface RawGitHubIssuePinned
-  extends RawGitHubIssueOpened {}
-
-// event - issues
-// action - unpinned
-export interface RawGitHubIssueUnpinned
-  extends RawGitHubIssueOpened {}
-
-// event - issues
-// action - locked
-export interface RawGitHubIssueLocked
-  extends RawGitHubIssueOpened {}
-
-// event - issues
-// action - unlocked
-export interface RawGitHubIssueUnlocked
-  extends RawGitHubIssueOpened {}
-
-// event - issues
-// action - milestoned
-export interface RawGitHubIssueMilestoned
-  extends RawGitHubIssueOpened {
-    milestone: MilestoneEntity;
-  }
-
-// event - issues
-// action - demilestoned
-export interface RawGitHubIssueDemilestoned
-  extends RawGitHubIssueOpened {
-    milestone: MilestoneEntity;
-  } 
-
-// event - issues
-// action - assigned
-export interface RawGitHubIssueUserAssigned extends PayloadBase {
-  issue: IssueEntity;
-  assignee: BaseUser;
-}
-
-// event - issues
-// action - unassigned
-export interface RawGitHubIssueUserUnassigned extends PayloadBase {
-  issue: IssueEntity;
-  assignee: BaseUser;
-}
-
-// event - issues
-// action - labeled
-export interface RawGitHubIssueLabelAdded extends PayloadBase {
-  issue: IssueEntity;
-  label: LabelEntity;
-}
-
-// event - issues
-// action - unlabeled
-export interface RawGitHubIssueLabelRemoved extends PayloadBase {
-  issue: IssueEntity;
-  label: LabelEntity;
-}
-
-/**
- * ISSUE COMMENTS
- */
-
-// event - issue_comment
-// action - created
-export interface RawGitHubIssueCommentCreated extends PayloadBase{
-  issue: IssueEntity;
-  comment: IssueComment;
-}
-
-// event - issue_comment
-// action - edited
-export interface RawGitHubIssueCommentEdited  
-  extends RawGitHubIssueCommentCreated {
-    changes: {
-      body: {
-        from: string;
-      }
-    }
-  }
-
-// event - issue_comment
-// action - deleted
-export interface RawGitHubissueCommentDeleted 
-  extends RawGitHubIssueCommentCreated {}
-
-
-
-/**
- * LABELS
- */
-
-// event - label
-// action - created
-export interface RawGitHubLabelCreated {
-  action: string;
-  label: LabelEntity;
-  repository: BaseRepository;
-  organization: BaseOrganization;
-  sender: BaseUser;
-}
-
-// event - label
-// action - edited
-export interface RawGitHubLabelEdited 
-  extends RawGitHubLabelCreated {
-    changes: {
-      name?: {
-        from: string;
-      },
-      color?: {
-        from: string;
-      },
-      description?: {
-        from: string;
-      }
-    }
-  }
-
-// event - label
-// action - deleted
-export interface RawGitHubLabelDeleted 
-  extends RawGitHubLabelCreated {}
-
-/**
- * MILESTONES
- */
-
-// event - milestone
-// action - created
-export interface RawGitHubMilestoneCreated {
-  action: string;
-  milestone: MilestoneEntity;
-  repository: BaseRepository;
-  organization: BaseOrganization;
-  sender: BaseUser;
-}
-
-// event - milestone
-// action - edited
-export interface RawGitHubMilestoneEdited
-  extends RawGitHubMilestoneCreated {
-    changes: {
-      title?: {
-        from: string
-      },
-      description?: {
-        from: string
-      }
-    }
-  }
-
-// event - milestone
-// action - deleted
-export interface RawGitHubMilestoneDeleted
-  extends RawGitHubMilestoneCreated {}
-
-/**
- * PROJECTS
- */
-
-// event - project
-// action - created
-export interface RawGitHubProjectCreated extends PayloadBase {
-  project: ProjectEntity;
-}
-
-// event - project
-// action - edited
-export interface RawGitHubProjectEdited extends PayloadBase{
-  project: ProjectEntity;
-}
-
-// event - project
-// action - closed
-export interface RawGitHubProjectCreated extends PayloadBase {
-  project: ProjectEntity;
-}
-
-// event - project
-// action - deleted
-export interface RawGitHubProjectDeleted extends PayloadBase{
-  project: ProjectEntity;
-}
-
-/**
- * PROJECT CARDS
- */
-
-// event - project_card
-// action - created
-export interface RawGitHubProjectCardCreated extends PayloadBase{
-  project_card: ProjectCardEntity;
-}
-
-// event - project_card
-// action - edited
-export interface RawGitHubProjectCardEdited extends RawGitHubProjectCardCreated {
-  changes: {
-    note: {
-      from: string;
-    },
-  }
-}
-
-// event - project_card
-// action - moved
-export interface RawGitHubProjectCardMoved
-  extends RawGitHubProjectCardCreated {
-    changes: {
-      column_id: {
-        from: number
-      }
-    }
-  }
-
-// event - project_card
-// action - converted
-export interface RawGitHubProjectCardConverted extends RawGitHubProjectCardEdited {}
-
-/**
- * PROJECT COLUMN
- */
-
-// event - project_column
-// action - created
-export interface RawGitHubProjectColumnCreated extends PayloadBase {
-  project_column: ProjectColumnEntity;
-}
-
-// event - project_column
-// action - edited
-export interface RawGitHubProjectColumnEdited
-  extends RawGitHubProjectColumnCreated {
-    changes: {
-      name: {
-        from: string
-      }
-    }
-  }
-
-// event - project_column
-// action - deleted
-export interface RawGitHubProjectColumnDeleted
-  extends RawGitHubProjectColumnCreated {}
-
-// event - project_column
-// action - moved
-export interface RawGitHubProjectColumnMoved
-  extends RawGitHubProjectColumnCreated {}
-
-/**
- * REPOSITORY STARS
- */
-
-// event - star
-// action - created
-export interface RawGitHubStarCreated extends PayloadBase{
-  starred_at: string;
-}
-
-// event - star
-// action - deleted
-export interface RawGitHubStarDeleted extends PayloadBase {
-  starred_at: null;
-}
-
-/**
- * REPOSITORY WATCH
- */
-
-// event - watch
-// action - started
-export interface RawGitHubWatchStarted extends PayloadBase {}
-
-/**
- * REPOSITORY
- */
-
-// event - repository
-// action - publicized
-export interface RawGitHubRepositoryPublicized extends PayloadBase {}
-
 // event - fork
 // action - (undefined)
 export interface RawGitHubRepositoryForked extends ActionlessPayloadBase {
   forkee: ForkeeEntity
 }
 
-/**
- * PULL REQUESTS
- */
+type RGT<E extends keyof RawGitHubTypes, A extends keyof RawGitHubTypes[E]> = RawGitHubTypes[E][A]
 
-// event - pull_request
-// action - opened
-export interface RawGitHubPullRequestOpened extends PayloadBase {
-  number: number;
-  pull_request: PullRequestEntity
-}
+export interface RawGitHubTypes  {
 
-// event - pull_request
-// action - edited
-export interface RawGitHubPullRequestEdited extends RawGitHubPullRequestOpened {
-  changes:  {
-    body?: {
-      from: string
+  /**
+   * ISSUES
+   */
+  issues: {
+    opened: PayloadBase & {
+      issue: IssueEntity;
+    };
+    edited: RawGitHubTypes["issues"]["opened"] & {
+      changes: {
+        body?: {
+          from: string
+        },
+        title?: {
+          from: string
+        }
+      }
+    };
+    closed: & RGT<"issues", "opened">;
+    deleted: & RGT<"issues", "opened">;
+    pinned: & RGT<"issues", "opened">;
+    unpinned: & RGT<"issues", "opened">;
+    locked: & RGT<"issues", "opened">;
+    unlocked: & RGT<"issues", "opened">;
+    milestoned: & RGT<"issues", "opened"> & {
+      milestone: MilestoneEntity;
+    };
+    demilestoned: & RGT<"issues", "milestoned">
+    assigned: & RGT<"issues", "opened"> & {
+      assignee: BaseUser;
+    };
+    unassigned: & RGT<"issues", "assigned">
+    labeled: & RGT<"issues", "opened"> & {
+      label: LabelEntity
+    };
+    unlabeled: & RGT<"issues", "labeled">;
+  };
+
+  /**
+   * ISSUE COMMENTS
+   */
+  issue_comment: {
+    created: PayloadBase & {
+      issue: IssueEntity;
+      comment: IssueComment;
+    };
+    edited: RGT<"issue_comment", "created"> & {
+      changes: {
+        body: {
+          from: string;
+        }
+      }
     },
-    title?: {
-      from: string
-    }
+    deleted: & RGT<"issue_comment", "created">;
+  };
+
+  /**
+   * LABELS
+   */
+  label: {
+    created: PayloadBase & {
+      label: LabelEntity;
+    };
+    edited: & RGT<"label", "created"> & {
+      changes: {
+        name?: {
+          from: string;
+        },
+        color?: {
+          from: string;
+        },
+        description?: {
+          from: string;
+        }
+      }
+    };
+    deleted: & RGT<"label", "created">;
+  };
+
+  /**
+   * MILESTONES
+   */
+  milestone: {
+    created: PayloadBase & {
+      milestone: MilestoneEntity;
+    },
+    edited: & RGT<"milestone", "created"> & {
+      changes: {
+        title?: {
+          from: string
+        };
+        description?: {
+          from: string
+        };
+      };
+    };
+    deleted: & RGT<"milestone", "created">;
+  };
+
+  /**
+   * PROJECTS
+   */
+  project: {
+    created: PayloadBase & {
+      project: ProjectEntity;
+    };
+    edited: & RGT<"project", "created">;
+    closed: & RGT<"project", "created">;
+    deleted: & RGT<"project", "created">;
+  };
+
+  /**
+   * PROJECT CARDS
+   */
+  project_card: {
+    created: PayloadBase & {
+      project_card: ProjectCardEntity;
+    };
+    edited: & RGT<"project_card", "created"> & {
+      changes: {
+        note: {
+          from: string;
+        };
+      };
+    };
+    deleted: & RGT<"project_card", "created">;
+    moved: & RGT<"project_card", "created"> & {
+      changes: {
+        collumn_id: {
+          from: number;
+        };
+      };
+    };
+    converted: & RGT<"project_card", "created">;
+  };
+
+  /**
+   * PROJECT COLUMNS
+   */
+  project_column: {
+    created: PayloadBase & {
+      project_column: ProjectColumnEntity;
+    };
+    edited: & RGT<"project_column", "created"> & {
+      changes: {
+        name: {
+          from: string;
+        };
+      };
+    };
+    deleted: & RGT<"project_column", "created">;
+    moved: & RGT<"project_column", "created">;
   }
+
+  /**
+   * REPOSITORY STARS
+   */
+  star: {
+    created: PayloadBase & {
+      starred_at: string;
+    };
+    deleted: PayloadBase & {
+      starred_at: null;
+    };
+  };
+
+  /**
+   * REPOSITORY
+   */
+  repository: {
+    publicized: PayloadBase;
+  }
+
+  /**
+   * PULL REQUESTS
+   */
+  pull_request:  {
+    opened: PayloadBase & {
+      number: number;
+      pull_request: PullRequestEntity;
+    };
+    edited: & RGT<"pull_request", "opened"> & {
+      changes:  {
+        body?: {
+          from: string;
+        };
+        title?: {
+          from: string;
+        };
+      };
+    };
+    closed: & RGT<"pull_request", "opened">;
+    reopened: & RGT<"pull_request", "opened">;
+    converted_to_draft: & RGT<"pull_request", "opened">;
+    ready_for_review: & RGT<"pull_request", "opened">;
+    assigned: & RGT<"pull_request", "opened"> & {
+      assignee: BaseUser;
+    };
+    unassigned: & RGT<"pull_request", "assigned">;
+    labeled: & RGT<"pull_request", "opened"> & {
+      label: LabelEntity;
+    };
+    unlabeled: & RGT<"pull_request", "labeled">;
+    locked: & RGT<"pull_request", "opened">;
+    unlocked: & RGT<"pull_request", "locked">;
+    review_request: & RGT<"pull_request", "opened"> & {
+      requested_reviewer: BaseUser;
+    };
+    review_request_removed: & RGT<"pull_request", "review_request">;
+  }
+
+  /**
+   * PULL REQUEST REVIEWS
+   */
+  pull_request_review: {
+    submitted: PayloadBase & {
+      review: ReviewEntity;
+      pull_request: PullRequestEntity;
+    };
+    edited: & RGT<"pull_request_review", "submitted"> & {
+      changes: {
+        body: {
+          from: string;
+        };
+      };
+    };
+  };
+
+  /**
+   * PULL REQUEST REVIEW COMMENTS
+   */
+   pull_request_review_comment: {
+     created: PayloadBase & {
+      comment: PullRequestReviewCommentEntity;
+      pull_request: PullRequestEntity
+     };
+     edited: & RGT<"pull_request_review_comment", "created"> & {
+      changes: {
+        body: {
+          from: string;
+        };
+      };
+    };
+   };
+
+   /**
+    * PULL REQUEST REVIEW THREAD
+    */
+    pull_request_review_thread: {
+      resolved: PayloadBase & {
+        pull_request: PullRequestEntity;
+        thread: PullRequestReviewThread;
+      };
+    };
+
+
 }
 
-// event - pull_request
-// action - closed
-export interface RawGitHubPullRequestClosed extends RawGitHubPullRequestOpened {}
-
-// event - pull_request
-// action - converted_to_draft
-export interface RawGitHubPullRequestConvertedToDraft extends RawGitHubPullRequestOpened {}
-
-// event - pull_request
-// action - ready_for_review
-export interface RawGitHubPullRequestReadyForReview extends RawGitHubPullRequestOpened {}
-
-// event - pull_request
-// action - assigned
-export interface RawGitHubPullRequestUserAssigned extends RawGitHubPullRequestOpened {
-  assignee: BaseUser;
+function test<E extends keyof RawGitHubTypes, A extends keyof RawGitHubTypes[E]>(event: E, action: A): RawGitHubTypes[E][A] {
+  return {} as RawGitHubTypes[E][A];
 }
 
-// event - pull_request
-// action - labeled
-export interface RawGitHubPullRequestLabeled extends RawGitHubPullRequestOpened {
-  label: LabelEntity
-}
-
-// event - pull_request
-// action - unlabeled
-export interface RawGitHubPullRequestUnlabeled extends RawGitHubPullRequestOpened {
-  label: LabelEntity
-}
-
-// event - pull_request
-// action - unassigned
-export interface RawGitHubPullRequestUserUnassigned extends RawGitHubPullRequestOpened {
-  assignee: BaseUser;
-}
-
-// event - pull_request
-// action - review_requested
-export interface RawGitHubPullRequestReviewRequested extends RawGitHubPullRequestOpened {
-  requested_reviewer: BaseUser
-}
-
+console.log((typeof test("issues", "edited")) == (typeof test("issues", "opened")))
