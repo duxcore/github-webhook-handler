@@ -70,6 +70,9 @@ export interface RawGitHubRepositoryForked extends ActionlessPayloadBase {
 type RGT<E extends keyof RawGitHubTypes, A extends keyof RawGitHubTypes[E]> = RawGitHubTypes[E][A]
 
 export type RawGitHubTypes = PayloadInjector<{
+  /**
+   * Branch Protection Rules
+   */
   branch_protection_rule: CommonTypeInjector<{
     created: {},
     edit: {
@@ -83,7 +86,17 @@ export type RawGitHubTypes = PayloadInjector<{
   }, { rule: BranchProtectionRuleEntity }>
 
   /**
-   * ISSUES
+   * Check Runs
+   */
+  check_run: {
+    created: {}
+    completed: {}
+    rerequested: {}
+    requested_action: {}
+  }
+
+  /**
+   * Issues
    */
   issues: CommonTypeInjector<{
     opened: {};
@@ -120,7 +133,7 @@ export type RawGitHubTypes = PayloadInjector<{
   }, { issue: IssueEntity }>;
 
   /**
-   * ISSUE COMMENTS
+   * Issue Comments
    */
   issue_comment: CommonTypeInjector<{
     created: {
@@ -141,7 +154,7 @@ export type RawGitHubTypes = PayloadInjector<{
   }>;
 
   /**
-   * LABELS
+   * Labels
    */
   label: CommonTypeInjector<{
     created: {};
@@ -162,7 +175,7 @@ export type RawGitHubTypes = PayloadInjector<{
   }, { label: LabelEntity; }>;
 
   /**
-   * MILESTONES
+   * Milestones
    */
   milestone: CommonTypeInjector<{
     created: {},
@@ -182,7 +195,7 @@ export type RawGitHubTypes = PayloadInjector<{
   }>;
 
   /**
-   * PROJECTS
+   * Projects
    */
   project: CommonTypeInjector<{
     created: {}
@@ -204,7 +217,7 @@ export type RawGitHubTypes = PayloadInjector<{
   }>;
 
   /**
-   * PROJECT CARDS
+   * Project Cards
    */
   project_card: {
     created: {
@@ -230,7 +243,7 @@ export type RawGitHubTypes = PayloadInjector<{
   };
 
   /**
-   * PROJECT COLUMNS
+   * Project Columns
    */
   project_column: CommonTypeInjector<{
     created: {};
@@ -249,7 +262,7 @@ export type RawGitHubTypes = PayloadInjector<{
   }>
 
   /**
-   * REPOSITORY STARS
+   * Repository Stars
    */
   star: {
     created: {
@@ -261,7 +274,7 @@ export type RawGitHubTypes = PayloadInjector<{
   };
 
   /**
-   * REPOSITORY
+   * Repository
    */
   repository:{
     created: {}
@@ -276,7 +289,7 @@ export type RawGitHubTypes = PayloadInjector<{
   }
 
   /**
-   * PULL REQUESTS
+   * Pull Requests
    */
   pull_request:  CommonTypeInjector<{
     opened: {};
@@ -317,7 +330,7 @@ export type RawGitHubTypes = PayloadInjector<{
   }>;
 
   /**
-   * PULL REQUEST REVIEWS
+   * Pull Request Reviews
    */
   pull_request_review: CommonTypeInjector<{
     submitted: {};
@@ -335,7 +348,7 @@ export type RawGitHubTypes = PayloadInjector<{
   }>;
 
   /**
-   * PULL REQUEST REVIEW COMMENTS
+   * Pull Request Review Commentse
    */
    pull_request_review_comment: CommonTypeInjector<{
      created: {}
@@ -352,7 +365,7 @@ export type RawGitHubTypes = PayloadInjector<{
    }>;
 
    /**
-    * PULL REQUEST REVIEW THREAD
+    * Pull Request Review Thread
     */
     pull_request_review_thread: {
       resolved: {
